@@ -30,8 +30,9 @@
 
 /* Port Controls  (Platform dependent) */
 
-#define CR95HF_select()					GPIO_ResetBits(GPIO_CS_CR95HF, GPIO_Pin_CS_CR95HF)
-#define CR95HF_deselect()				GPIO_SetBits(GPIO_CS_CR95HF, GPIO_Pin_CS_CR95HF)
+#define 	CR95HF_select()					GPIO_ResetBits(GPIO_CS_CR95HF, GPIO_Pin_CS_CR95HF)
+#define 	CR95HF_deselect()					GPIO_SetBits(GPIO_CS_CR95HF, GPIO_Pin_CS_CR95HF)
+#define	CR95_ON()							GPIO_WriteBit(GPIO_RFID_EN,RFID_EN, (BitAction)(1))
 
 #define	add_gplx_start	0
 #define	add_gplx_end	3

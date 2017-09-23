@@ -37,50 +37,66 @@ char command_156_GAIN[17]={0x00,0x07,0x0E,0x03,0xA1,0x00,0xF8,0x01,0x18,0x00,0x2
 char command_STC[6]={0x00,0x08,0x03,0x62,0x01,0x00};
 
 
+/*
+*
+*/
 void sys_CR95HF(void)
 {
-	if(flag_on_power==1 && timer_on_power_cr95hf>1){
+	if(flag_on_power==1 && timer_on_power_cr95hf>1)
+	{
 		timer_on_power_cr95hf=0;		
-		GPIO_WriteBit(GPIO_RFID_EN,RFID_EN, (BitAction)(1));
+		CR95_ON();
 		flag_check_tag=1;
 		flag_on_power=0;
 		flag_wakeup=1;
 		num_wakeup_cr95hf=0;
 		timer_wakeup_cr5hf=0;
 	}
-	if(flag_wakeup==1){//wakeup xong moi init-doc-ghi
+	//wakeup xong moi init-doc-ghi
+	if(flag_wakeup==1)
+	{
 		Wakeup_CR95HF();
 	}
-	else{
-		if(timer_ECH_cr95hf>=200 && flag_ECH_cr95hf==1){
+	else
+	{
+		if(timer_ECH_cr95hf>=200 && flag_ECH_cr95hf==1)
+		{
 			ECH_CR95HF();
 		}     
-		if(flag_read_rfid==1&& init_cr95hf_ok==1){//
+		if(flag_read_rfid==1&& init_cr95hf_ok==1)
+		{
 			flag_read_rfid=0;
-			if(status_tag==1){//&& status_write_data==0
+			if(status_tag==1)
+			{
 				Read_Data_Tag();
 			}
 		}
-		if(flag_check_tag==1 && timer_check_tag>=1 && init_cr95hf_ok==1 && flag_start_send_data_firm==0){// && flag_check_tag==1&& status_write_data==0
+		if(flag_check_tag==1 && timer_check_tag>=1 && init_cr95hf_ok==1 && flag_start_send_data_firm==0)
+		{
 			timer_check_tag=0;
 			flag_check_tag=0;
 			TAG_INFO();
 			timer_check_tag=0;
 			flag_check_tag=1;
 		}
-		if(flag_write_data==1 && status_tag==1){
+		if(flag_write_data==1 && status_tag==1)
+		{
 			flag_write_data=0;
 			write_secter(buff_write_data);
 		}
 	}
 	RESET_CR95HF();
-	if(num_notag_reset>100){
-    num_notag_reset=0;
-	  flag_reset_cr95hf=1;
-  }
+	if(num_notag_reset>100)
+	{
+		num_notag_reset=0;
+		flag_reset_cr95hf=1;
+	}
 }
 
-
+/*
+*	Tao du lieu ghi vao rfid
+*/
+/* 
 void CR95HF_Write(uint8_t *buff, uint8_t length)
 {
 	uint8_t i=0,dau_phay=0,checksum=0,numbyte=0,index_lx=0;
@@ -97,7 +113,8 @@ void CR95HF_Write(uint8_t *buff, uint8_t length)
 				numbyte=0;
 				index_lx=i;
 			}
-			if(dau_phay==2){//them gplx lai xe vao byte 0 -> byte (j-3)
+			if(dau_phay==2)
+			{//them gplx lai xe vao byte 0 -> byte (j-3)
 				checksum=checksum-buff_write_data[i-index_lx-1];
 				buff_write_data[i-index_lx-1]=0;
 				buff_write_data[15]=checksum;
@@ -131,8 +148,11 @@ void CR95HF_Write(uint8_t *buff, uint8_t length)
 	buff_write_data[72]=checksum;// check sum sdt  // byte 73-> 75 ko co data, them 76 byte vao de ghi cho du 1 secter
 	flag_write_data=1;
 	num_write_again=0;
-}
-void write_secter(uint8_t *buff)
+} */
+/*
+*
+*/
+/* void write_secter(uint8_t *buff)
 {
 	uint8_t i=0,index=0,num_write=0,j=0,num_write_err=0;
 	uint16_t num_wait=0;
@@ -140,34 +160,36 @@ void write_secter(uint8_t *buff)
 	uint8_t data[5];
 	char temp_buff[10];
 
-  CR95HF_deselect();
-  temp_buff[0]=0x00;
-  temp_buff[1]=0x04;
-  temp_buff[2]=0x07;
-  temp_buff[3]=0x02;
-  temp_buff[4]=0x21;
-  for(i=0;i<19;i++)
+	CR95HF_deselect();
+	temp_buff[0]=0x00;
+	temp_buff[1]=0x04;
+	temp_buff[2]=0x07;
+	temp_buff[3]=0x02;
+	temp_buff[4]=0x21;
+	for(i=0;i<19;i++)
 	{
-    temp_buff[5]=i;
-    temp_buff[6]=buff[index];
-    temp_buff[7]=buff[index+1];
-    temp_buff[8]=buff[index+2];
-    temp_buff[9]=buff[index+3];   
-    data[0]=0;
-    SPI_SendCommand_CR95HF(temp_buff,10); 
+		temp_buff[5]=i;
+		temp_buff[6]=buff[index];
+		temp_buff[7]=buff[index+1];
+		temp_buff[8]=buff[index+2];
+		temp_buff[9]=buff[index+3];   
+		data[0]=0;
+		SPI_SendCommand_CR95HF(temp_buff,10); 
 		if(wait_polling(2)==1)
 		{
 			timer_check_tag=0;
 		}
-    data[0]=0;
-    CR95HF_select();
+		data[0]=0;
+		CR95HF_select();
       CR95HF_transfer(0x02);  
       data[0]=CR95HF_transfer(0);//response
       data[1]=CR95HF_transfer(0);//length data
-      for(j=0;j<data[1];j++){
+      for(j=0;j<data[1];j++)
+		{
         CR95HF_transfer(0);
       }
-      if(data[0]!=0x80){//ghi err
+      if(data[0]!=0x80)
+		{//ghi err
         i--;
         num_write_err++;
         if(num_write_err>50){
@@ -197,8 +219,14 @@ void write_secter(uint8_t *buff)
     num_buzz=2;
   }
 }
-void RESET_CR95HF(void){
-	if(flag_reset_cr95hf==1){
+ */
+/*
+*	Reset CR95
+*/
+void RESET_CR95HF(void)
+{
+	if(flag_reset_cr95hf==1)
+	{
 	//	CR95HF_select();
 	//	CR95HF_transfer(0x01);
 	 // printf(" -- reset cr95hf2");  
@@ -216,7 +244,8 @@ void RESET_CR95HF(void){
 		GPIO_WriteBit(GPIO_RFID_EN,RFID_EN, (BitAction)(0));
 		CR95HF_deselect();
 	}
-	if(timer_resset_cr95hf>=2 && flag_reset_cr95hf==2){
+	if(timer_resset_cr95hf>=2 && flag_reset_cr95hf==2)
+	{
 		flag_reset_cr95hf=0;
 		GPIO_WriteBit(GPIO_RFID_EN,RFID_EN, (BitAction)(1));
 		flag_on_power=1;
@@ -225,64 +254,75 @@ void RESET_CR95HF(void){
 		timer_wakeup_cr5hf=0;
 	}
 }
+
+
 void ECH_CR95HF(void){
   uint8_t data=0,flag_ech_err=0,i=0;
  // u16 num_wait=0;
   SPI_SendCommand_CR95HF(command_ECH,3);
-  if(wait_polling(1)==1){
+  if(wait_polling(1)==1)
+  {
 		 timer_ECH_cr95hf=0;
 		 flag_ECH_cr95hf=1;
 		 flag_ech_err=1;    
   }
-  if(flag_ech_err==0){ 
+  if(flag_ech_err==0)
+  { 
     CR95HF_select();
     CR95HF_transfer(0x02);    
     data=CR95HF_transfer(0);  
     CR95HF_deselect();
-    if(data==0x55){
-      if(IDN_CR95HF()==1){
+    if(data==0x55)
+	 {
+      if(IDN_CR95HF()==1)
+		{
         ISO156_CR95HF();
       }  
     }
-    else{  
+    else
+	 {  
       timer_ECH_cr95hf=0;
       flag_ECH_cr95hf=1;
-   //   for(char i=0;i<100;i++){
-   //     SPI_SendCommand_CR95HF(command_ECH,3);
-   //   }
       num_ech_err++;
-      if(num_ech_err>5){
+      if(num_ech_err>5)
+		{
         num_ech_err=0;
         flag_reset_cr95hf=1;
       }  
     }
   }
-  else{//ech lai
+  else
+  {//ech lai
     flag_ech_err=0;
-    for(i=0;i<200;i++){
-      SPI_SendCommand_CR95HF(command_ECH,3);
-    }
+    for(i=0;i<200;i++)	SPI_SendCommand_CR95HF(command_ECH,3);
     num_ech_err++;
-    if(num_ech_err>5){
+    if(num_ech_err>5)
+	 {
       num_ech_err=0;
       flag_reset_cr95hf=1;
     }
   }
 }
-char wait_polling(char timer_poling){
+
+
+char wait_polling(char timer_poling)
+{
   uint8_t poll=0,data=0;
   uint16_t num_wait=0;
   CR95HF_select();
   timer_wait_poling=0;
 	timer_poling=timer_poling*3;
-	while(data!=0x08){
-		if(timer_wait_poling>=timer_poling){
+	while(data!=0x08)
+	{
+		if(timer_wait_poling>=timer_poling)
+		{
 			timer_wait_poling=0;
 			data= CR95HF_transfer(0x03);
 			data=data&0x08;
 			num_wait++;
 			IWDG_ReloadCounter();
-			if(num_wait>=20){
+			if(num_wait>=20)
+			{
 				data=0x08;
 				poll=1;   
 				CR95HF_deselect();
@@ -293,31 +333,31 @@ char wait_polling(char timer_poling){
   CR95HF_deselect();
   return poll;
 }
-char IDN_CR95HF(void){
-  char data=0,i;
-  SPI_SendCommand_CR95HF(command_IDN,3);
-  if(wait_polling(1)==1){
-       timer_ECH_cr95hf=0;
-       flag_ECH_cr95hf=1;
-       return 0;   
-  } 
-  CR95HF_select();
-  CR95HF_transfer(0x02);  
-  CR95HF_transfer(0);//response
-  data=CR95HF_transfer(0);//len data
-  for(i=0;i<data;i++){
-    CR95HF_transfer(0);
-  }  
-  CR95HF_deselect();
-  if(data==0x0F){ 
-    return 1;    
-  }
-  else{ 
-    timer_ECH_cr95hf=0;
-    flag_ECH_cr95hf=1;
-    return 0;   
-  }
+
+
+char IDN_CR95HF(void)
+{
+	char data=0,i;
+	SPI_SendCommand_CR95HF(command_IDN,3);
+	if(wait_polling(1)==1)
+	{
+		timer_ECH_cr95hf=0;
+		flag_ECH_cr95hf=1;
+		return 0;   
+	} 
+	CR95HF_select();
+	CR95HF_transfer(0x02);  
+	CR95HF_transfer(0);//response
+	data=CR95HF_transfer(0);//len data
+	for(i=0;i<data;i++)	CR95HF_transfer(0);  
+	CR95HF_deselect();
+	if(data==0x0F)	return 1;
+	
+	timer_ECH_cr95hf=0;
+	flag_ECH_cr95hf=1;
+	return 0;   
 }
+
 char ISO156_CR95HF(void){
   char data=0;
 //  u16 num_wait=0;
@@ -344,72 +384,88 @@ char ISO156_CR95HF(void){
     return 0;   
   }
 }
-void TAG_INFO(void){
-  uint8_t i=0;
-  uint8_t data[20];
-  data[0]=0;
-  SPI_SendCommand_CR95HF(command_156_INFO,5); 
-  if(wait_polling(1)==1){
-    timer_check_tag=0;
-  }
-  CR95HF_select();
+
+void TAG_INFO(void)
+{
+	uint8_t i=0;
+	uint8_t data[20];
+	data[0]=0;
+	SPI_SendCommand_CR95HF(command_156_INFO,5); 
+	if(wait_polling(1)==1)
+	{
+		timer_check_tag=0;
+	}
+	CR95HF_select();
 	CR95HF_transfer(0x02);  
 	data[0]=CR95HF_transfer(0);//response	
 	data[1]=CR95HF_transfer(0);//len data
 	num_info++;
-	if(data[1]<20){//kt tran
-		for(i=0;i<data[1];i++){//
-			data[i+2]=CR95HF_transfer(0);
-		}
+	if(data[1]<20)
+	{//kt tran
+		for(i=0;i<data[1];i++)	data[i+2]=CR95HF_transfer(0);
 	}
   CR95HF_deselect(); 
 	
-  if(data[0]==0x80){  
-    timer_check_tag=0;
-    status_tag=OK;
-    num_infotag_err=0;
-    num_notag_reset=0;
-    if(flag_read_again==1){
-      flag_read_again=0;
-      flag_read_rfid=1;
-    }
-    if(flag_write_again==1){
-      flag_write_again=0;
-      flag_write_data=1;
-    }
-    timer_check_tag=0;   
-  }
-  else{
+	if(data[0]==0x80)
+	{  
+		timer_check_tag=0;
+		status_tag=OK;
+		num_infotag_err=0;
+		num_notag_reset=0;
+		if(flag_read_again==1)
+		{
+			flag_read_again=0;
+			flag_read_rfid=1;
+		}
+		if(flag_write_again==1)
+		{
+			flag_write_again=0;
+			flag_write_data=1;
+		}
+		timer_check_tag=0;   
+	}
+	else
+	{
 		num_notag_reset++;
-    if(data[0]==0x87 || data[0]==0x88){ 
-      num_infotag_err=0;
-    }
-    else{
-			if(data[0]==0xFF){
+		if(data[0]==0x87 || data[0]==0x88)
+		{ 
+			num_infotag_err=0;
+		}
+		else
+		{
+			if(data[0]==0xFF)
+			{
 				num_infotag_err=0;
 				flag_reset_cr95hf=1;
 			}
-			else{
+			else
+			{
 				num_infotag_err++;
-	//      timer_check_tag=0;
-				if(num_infotag_err>5){//20
+				if(num_infotag_err>5)
+				{
 					num_infotag_err=0;
 					flag_reset_cr95hf=1;
 				}
 			}
-    }
+		}
 		status_tag=ERROR;
 		status_old_tag=0;
-    timer_check_tag=0;
-  }
-	if((status_old_tag==0 && status_tag==OK)){
-		if(status_old_tag==0){
+		timer_check_tag=0;
+	}
+	if((status_old_tag==0 && status_tag==OK))
+	{
+		if(status_old_tag==0)
+		{
 			status_old_tag=1;
 		}
 		flag_read_rfid=1;
 		timer_send_RFID=0;
 	}
 }
+
+/*
+*	Read data from tag
+*/
 void Read_Data_Tag(void)
 { 
 	uint8_t addres_cr95hf=0,i=0,k=0;
@@ -425,6 +481,7 @@ void Read_Data_Tag(void)
 	// Read sector 0->19
 	for(addres_cr95hf=0;addres_cr95hf<19;addres_cr95hf++)
 	{
+		// Add address data
 		command_READ_TAG[5]=addres_cr95hf;
 		SPI_SendCommand_CR95HF(command_READ_TAG,6);
 		data[0]=0;
@@ -515,27 +572,31 @@ void Read_Data_Tag(void)
 		index_data_RF=0;
 	}
 }
-
+/*
+*	
+*/
 void Wakeup_CR95HF(void)
 {
-	if(num_wakeup_cr95hf==0 && timer_wakeup_cr5hf>5){
+	if(num_wakeup_cr95hf==0 && timer_wakeup_cr5hf>5)
+	{
 		timer_wakeup_cr5hf=0;
 		num_wakeup_cr95hf=1;
 		GPIO_WriteBit(GPIO_RFID_IRQ,RFID_IRQ, (BitAction)(0));
 	}
-  if(timer_wakeup_cr5hf>10 && num_wakeup_cr95hf==1){
-    timer_wakeup_cr5hf=0;
+  if(timer_wakeup_cr5hf>10 && num_wakeup_cr95hf==1)
+  {
+		timer_wakeup_cr5hf=0;
 		num_wakeup_cr95hf=0;
-    GPIO_WriteBit(GPIO_RFID_IRQ,RFID_IRQ, (BitAction)(1));
-    flag_wakeup=0;
-    timer_ECH_cr95hf=0;
-    flag_ECH_cr95hf=1;
+		GPIO_WriteBit(GPIO_RFID_IRQ,RFID_IRQ, (BitAction)(1));
+		flag_wakeup=0;
+		timer_ECH_cr95hf=0;
+		flag_ECH_cr95hf=1;
   }
 }
 /*
 *	Init SPI interface for CR95
 */
-void INIT_SPI2(void)
+void CR95_Init(void)
 {
 	SPI_InitTypeDef   SPI_InitStructure;
 	GPIO_InitTypeDef  GPIO_InitStructure;
